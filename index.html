@@ -2,83 +2,94 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Baseball Museum API Test</title>
+  <title>Baseball Museum Stats Explorer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Baseball Museum API Tester</h1>
+  <h1>Baseball Museum Stats Explorer</h1>
 
-  <div class="form">
-    <label for="query">Choose query type:</label>
-    <select id="query">
-      <option value="topStat">Top Stat</option>
-      <option value="playersFromCity">Players From City</option>
-      <option value="countCity">Count Players From City</option>
-      <option value="lowestERA">Lowest ERA</option>
+  <div class="filters">
+    <!-- Search by Name -->
+    <label for="name">Search Player Name:</label>
+    <input type="text" id="name" placeholder="e.g. Babe Ruth">
+
+    <!-- Active Years -->
+    <label for="fromYear">Active From:</label>
+    <input type="number" id="fromYear" placeholder="e.g. 1980">
+    <label for="toYear">To:</label>
+    <input type="number" id="toYear" placeholder="e.g. 1990">
+
+    <!-- Stat Leaders -->
+    <label for="stat">Choose Stat:</label>
+    <select id="stat">
+      <option value="HR">Home Runs</option>
+      <option value="BA">Batting Average</option>
+      <option value="SLG">Slugging %</option>
+      <option value="OPS">OPS</option>
+      <option value="WAR">WAR</option>
     </select>
-
-    <label for="stat">Stat (for topStat):</label>
-    <input type="text" id="stat" placeholder="e.g. HR, BA, SLG">
-
-    <label for="limit">Limit:</label>
+    <label for="limit">Top N:</label>
     <input type="number" id="limit" value="10">
 
-    <label for="city">City (for city queries):</label>
-    <input type="text" id="city" placeholder="e.g. Charlotte">
-
-    <label for="minIP">Min IP (for lowestERA):</label>
+    <!-- Pitching Filters -->
+    <label for="era">Max ERA:</label>
+    <input type="number" step="0.01" id="era" placeholder="e.g. 3.00">
+    <label for="minIP">Min IP:</label>
     <input type="number" id="minIP" value="100">
 
-    <button onclick="callAPI()">Run Query</button>
+    <!-- Birthplace -->
+    <label for="city">Birthplace:</label>
+    <input type="text" id="city" placeholder="e.g. Charlotte">
+
+    <button onclick="runQuery()">Search</button>
   </div>
 
   <div id="output"></div>
 
   <script>
-    async function callAPI() {
-      const query = document.getElementById('query').value;
+    async function runQuery() {
+      const name = document.getElementById('name').value;
+      const fromYear = document.getElementById('fromYear').value;
+      const toYear = document.getElementById('toYear').value;
       const stat = document.getElementById('stat').value;
       const limit = document.getElementById('limit').value;
-      const city = document.getElementById('city').value;
+      const era = document.getElementById('era').value;
       const minIP = document.getElementById('minIP').value;
+      const city = document.getElementById('city').value;
 
-      let url = `/.netlify/functions/query?query=${query}`;
-      if (stat) url += `&stat=${stat}`;
-      if (limit) url += `&limit=${limit}`;
-      if (city) url += `&city=${encodeURIComponent(city)}`;
-      if (minIP) url += `&minIP=${minIP}`;
+      let url = "/.netlify/functions/query";
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
+      // Decide which query to call
+      if (name) {
+        url += `?query=playersFromCity&city=${encodeURIComponent(name)}`; // you can add a "searchByName" case later
+      } else if (city) {
+        url += `?query=playersFromCity&city=${encodeURIComponent(city)}`;
+      } else if (era) {
+        url += `?query=lowestERA&minIP=${minIP}`;
+      } else {
+        url += `?query=topStat&stat=${stat}&limit=${limit}`;
+      }
 
-        // Handle countCity separately
-        if (query === "countCity") {
-          document.getElementById('output').innerHTML = `<p>Players from ${city}: <strong>${data.count}</strong></p>`;
-          return;
-        }
+      const response = await fetch(url);
+      const data = await response.json();
 
-        // Build table
-        if (Array.isArray(data)) {
-          let table = "<table><thead><tr>";
-          // Use keys from first record
-          const keys = Object.keys(data[0]);
-          keys.forEach(k => table += `<th>${k}</th>`);
-          table += "</tr></thead><tbody>";
+      // Build table
+      if (Array.isArray(data)) {
+        let table = "<table><thead><tr>";
+        const keys = Object.keys(data[0]);
+        keys.forEach(k => table += `<th>${k}</th>`);
+        table += "</tr></thead><tbody>";
 
-          data.forEach(row => {
-            table += "<tr>";
-            keys.forEach(k => table += `<td>${row[k]}</td>`);
-            table += "</tr>";
-          });
+        data.forEach(row => {
+          table += "<tr>";
+          keys.forEach(k => table += `<td>${row[k]}</td>`);
+          table += "</tr>";
+        });
 
-          table += "</tbody></table>";
-          document.getElementById('output').innerHTML = table;
-        } else {
-          document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-        }
-      } catch (err) {
-        document.getElementById('output').textContent = "Error: " + err.message;
+        table += "</tbody></table>";
+        document.getElementById('output').innerHTML = table;
+      } else {
+        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
       }
     }
   </script>
