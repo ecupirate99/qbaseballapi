@@ -11,8 +11,9 @@
     <p>Explore legendary players by stats, birthplace, and era</p>
   </header>
 
+  <!-- Stat Filters -->
   <section class="filters">
-    <!-- Stat Leaders -->
+    <h2>Stat Leaders</h2>
     <div class="filter-group">
       <label for="stat">Choose Stat:</label>
       <select id="stat">
@@ -29,30 +30,27 @@
       <input type="number" id="limit" value="10">
     </div>
 
-    <!-- Pitching Filters -->
-    <div class="filter-group">
-      <label for="minIP">Min IP:</label>
-      <input type="number" id="minIP" value="100">
-    </div>
+    <button onclick="runStatQuery()">Search Stat Leaders</button>
+  </section>
 
-    <!-- Birthplace -->
+  <!-- City Search -->
+  <section class="filters">
+    <h2>Search by City</h2>
     <div class="filter-group">
       <label for="city">Birthplace:</label>
       <input type="text" id="city" placeholder="e.g. Charlotte">
     </div>
+    <button onclick="runCityQuery()">Search Players by City</button>
+  </section>
 
-    <!-- Active Years -->
+  <!-- Pitching Filters -->
+  <section class="filters">
+    <h2>Pitching Leaders</h2>
     <div class="filter-group">
-      <label for="fromYear">Active From:</label>
-      <input type="number" id="fromYear" placeholder="e.g. 1980">
+      <label for="minIP">Min IP:</label>
+      <input type="number" id="minIP" value="100">
     </div>
-
-    <div class="filter-group">
-      <label for="toYear">To:</label>
-      <input type="number" id="toYear" placeholder="e.g. 1990">
-    </div>
-
-    <button onclick="runQuery()">Search</button>
+    <button onclick="runPitchingQuery()">Search Pitching Leaders</button>
   </section>
 
   <!-- Milestone Clubs -->
@@ -68,31 +66,27 @@
   </section>
 
   <script>
-    async function runQuery() {
+    async function runStatQuery() {
       const stat = document.getElementById('stat').value;
       const limit = document.getElementById('limit').value;
+      let url = `/.netlify/functions/query?query=topStat&stat=${stat}&limit=${limit}`;
+      fetchAndRender(url);
+    }
+
+    async function runCityQuery() {
       const city = document.getElementById('city').value;
+      if (!city) {
+        document.getElementById("output").innerHTML = "<p>Please enter a city.</p>";
+        return;
+      }
+      let url = `/.netlify/functions/query?query=playersFromCity&city=${encodeURIComponent(city)}`;
+      fetchAndRender(url);
+    }
+
+    async function runPitchingQuery() {
       const minIP = document.getElementById('minIP').value;
-      const fromYear = document.getElementById('fromYear').value;
-      const toYear = document.getElementById('toYear').value;
-
-      let url = "/.netlify/functions/query";
-
-      if (city) {
-        url += `?query=playersFromCity&city=${encodeURIComponent(city)}`;
-      } else if (minIP) {
-        url += `?query=lowestERA&minIP=${minIP}`;
-      } else {
-        url += `?query=topStat&stat=${stat}&limit=${limit}`;
-      }
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        renderTable(data);
-      } catch (err) {
-        document.getElementById("output").textContent = "Error: " + err.message;
-      }
+      let url = `/.netlify/functions/query?query=lowestERA&minIP=${minIP}`;
+      fetchAndRender(url);
     }
 
     async function runMilestone(stat, threshold) {
@@ -102,6 +96,16 @@
         const data = await response.json();
         const filtered = data.filter(player => player[stat] >= threshold);
         renderTable(filtered);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+
+    async function fetchAndRender(url) {
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        renderTable(data);
       } catch (err) {
         document.getElementById("output").textContent = "Error: " + err.message;
       }
@@ -118,7 +122,6 @@
           table += "<tr>";
           keys.forEach(k => {
             let val = row[k];
-            // Format batting average
             if (k === "BA" && val != null) {
               val = parseFloat(val).toFixed(3);
               if (val.startsWith("0")) val = val.substring(1);
@@ -136,7 +139,6 @@
       }
     }
 
-    // Column sorting
     function makeTableSortable(tableId) {
       const table = document.getElementById(tableId);
       const headers = table.querySelectorAll("th");
