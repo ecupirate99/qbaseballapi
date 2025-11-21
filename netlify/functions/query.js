@@ -1,9 +1,9 @@
-// netlify/functions/query.js
-const fetch = require("node-fetch");
+// Netlify Function: query.js
+// Uses built-in fetch (Node 18+ runtime on Netlify)
 
 exports.handler = async (event) => {
   const baseId = "appcCimtbrYkidFMA";       // replace with your Airtable Base ID
-  const tableName = "SHEET2";         // replace with your table name
+  const tableName = "SHEET2";         // replace with your Airtable table name
   const apiKey = process.env.AIRTABLE_API_KEY;
 
   const query = event.queryStringParameters.query;
