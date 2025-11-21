@@ -2,8 +2,8 @@
 const fetch = require("node-fetch");
 
 exports.handler = async (event) => {
-  const baseId = "YOUR_BASE_ID";       // replace with your Airtable Base ID
-  const tableName = "Players";         // replace with your table name
+  const baseId = "appcCimtbrYkidFMA";       // replace with your Airtable Base ID
+  const tableName = "SHEET2";         // replace with your table name
   const apiKey = process.env.AIRTABLE_API_KEY;
 
   const query = event.queryStringParameters.query;
