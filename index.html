@@ -9,6 +9,7 @@
   <header>
     <h1>⚾ Baseball Museum Stats Explorer</h1>
     <p>Explore legendary players by stats, birthplace, and era</p>
+    <button id="clearBtn" onclick="clearFilters()">Clear Filters</button>
   </header>
 
   <!-- Stat Filters -->
@@ -33,14 +34,14 @@
     <button onclick="runStatQuery()">Search Stat Leaders</button>
   </section>
 
-  <!-- City Search -->
+  <!-- Birthplace Search -->
   <section class="filters">
-    <h2>Search by City</h2>
+    <h2>Search by Birthplace (City/Town)</h2>
     <div class="filter-group">
       <label for="city">Birthplace:</label>
-      <input type="text" id="city" placeholder="e.g. Charlotte">
+      <input type="text" id="city" placeholder="e.g. Raleigh">
     </div>
-    <button onclick="runCityQuery()">Search Players by City</button>
+    <button onclick="runCityQuery()">Search Players by Birthplace</button>
   </section>
 
   <!-- Pitching Filters -->
@@ -51,14 +52,6 @@
       <input type="number" id="minIP" value="100">
     </div>
     <button onclick="runPitchingQuery()">Search Pitching Leaders</button>
-  </section>
-
-  <!-- Milestone Clubs -->
-  <section class="milestones">
-    <h2>Milestone Clubs</h2>
-    <button onclick="runMilestone('HR', 500)">500+ HR Club</button>
-    <button onclick="runMilestone('H', 3000)">3000 Hits Club</button>
-    <button onclick="runMilestone('W', 300)">300 Wins Club</button>
   </section>
 
   <section id="results">
@@ -76,29 +69,35 @@
     async function runCityQuery() {
       const city = document.getElementById('city').value;
       if (!city) {
-        document.getElementById("output").innerHTML = "<p>Please enter a city.</p>";
+        document.getElementById("output").innerHTML = "<p>Please enter a city/town.</p>";
         return;
       }
       let url = `/.netlify/functions/query?query=playersFromCity&city=${encodeURIComponent(city)}`;
-      fetchAndRender(url);
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const count = data.length;
+          const header = `<h3>${count} players were born in ${city}!</h3>`;
+          // Remove Birthplace column
+          const filtered = data.map(player => {
+            const { Birthplace, ...rest } = player;
+            return rest;
+          });
+          document.getElementById("output").innerHTML = header;
+          renderTable(filtered, true);
+        } else {
+          document.getElementById("output").innerHTML = `<p>No players found from ${city}.</p>`;
+        }
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
     }
 
     async function runPitchingQuery() {
       const minIP = document.getElementById('minIP').value;
       let url = `/.netlify/functions/query?query=lowestERA&minIP=${minIP}`;
       fetchAndRender(url);
-    }
-
-    async function runMilestone(stat, threshold) {
-      let url = `/.netlify/functions/query?query=topStat&stat=${stat}&limit=200`;
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const filtered = data.filter(player => player[stat] >= threshold);
-        renderTable(filtered);
-      } catch (err) {
-        document.getElementById("output").textContent = "Error: " + err.message;
-      }
     }
 
     async function fetchAndRender(url) {
@@ -111,7 +110,7 @@
       }
     }
 
-    function renderTable(data) {
+    function renderTable(data, skipHeader=false) {
       if (Array.isArray(data) && data.length > 0) {
         let table = "<table id='outputTable'><thead><tr>";
         const keys = Object.keys(data[0]);
@@ -132,9 +131,9 @@
         });
 
         table += "</tbody></table>";
-        document.getElementById("output").innerHTML = table;
+        document.getElementById("output").innerHTML += table;
         makeTableSortable("outputTable");
-      } else {
+      } else if (!skipHeader) {
         document.getElementById("output").innerHTML = "<p>No results found.</p>";
       }
     }
@@ -156,6 +155,14 @@
           rows.forEach(row => table.querySelector("tbody").appendChild(row));
         });
       });
+    }
+
+    function clearFilters() {
+      document.getElementById('stat').value = 'HR';
+      document.getElementById('limit').value = 10;
+      document.getElementById('city').value = '';
+      document.getElementById('minIP').value = 100;
+      document.getElementById('output').innerHTML = '';
     }
   </script>
 </body>
