@@ -16,18 +16,32 @@ body {
 header {
   background: var(--primary);
   color: white;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
 }
 
 header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.8rem;
 }
 
 header p {
-  margin: 0.5rem 0 0;
+  margin: 0.5rem 0;
   font-style: italic;
+}
+
+#clearBtn {
+  margin-top: 0.5rem;
+  background: var(--secondary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#clearBtn:hover {
+  background: #b5172d;
 }
 
 .filters {
@@ -39,9 +53,16 @@ header p {
   border-bottom: 3px solid var(--secondary);
 }
 
+.filters h2 {
+  width: 100%;
+  margin: 0 0 0.5rem;
+  color: var(--primary);
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
+  flex: 1 1 150px;
 }
 
 label {
@@ -61,51 +82,3 @@ button {
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
-}
-
-button:hover {
-  background: #b5172d;
-}
-
-.milestones {
-  margin: 1rem;
-  padding: 1rem;
-  background: var(--accent);
-  border: 2px solid var(--secondary);
-  border-radius: 6px;
-}
-
-.milestones h2 {
-  margin-top: 0;
-  color: var(--primary);
-}
-
-.milestones button {
-  margin: 0.25rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.milestones button:hover {
-  background: var(--secondary);
-}
-
-#results {
-  padding: 1rem;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 0.75rem;
-  text-align: left;
