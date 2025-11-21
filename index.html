@@ -6,91 +6,154 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Baseball Museum Stats Explorer</h1>
+  <header>
+    <h1>⚾ Baseball Museum Stats Explorer</h1>
+    <p>Explore legendary players by stats, birthplace, and era</p>
+  </header>
 
-  <div class="filters">
-    <!-- Search by Name -->
-    <label for="name">Search Player Name:</label>
-    <input type="text" id="name" placeholder="e.g. Babe Ruth">
-
-    <!-- Active Years -->
-    <label for="fromYear">Active From:</label>
-    <input type="number" id="fromYear" placeholder="e.g. 1980">
-    <label for="toYear">To:</label>
-    <input type="number" id="toYear" placeholder="e.g. 1990">
-
+  <section class="filters">
     <!-- Stat Leaders -->
-    <label for="stat">Choose Stat:</label>
-    <select id="stat">
-      <option value="HR">Home Runs</option>
-      <option value="BA">Batting Average</option>
-      <option value="SLG">Slugging %</option>
-      <option value="OPS">OPS</option>
-      <option value="WAR">WAR</option>
-    </select>
-    <label for="limit">Top N:</label>
-    <input type="number" id="limit" value="10">
+    <div class="filter-group">
+      <label for="stat">Choose Stat:</label>
+      <select id="stat">
+        <option value="HR">Home Runs</option>
+        <option value="BA">Batting Average</option>
+        <option value="SLG">Slugging %</option>
+        <option value="OPS">OPS</option>
+        <option value="WAR">WAR</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="limit">Top N:</label>
+      <input type="number" id="limit" value="10">
+    </div>
 
     <!-- Pitching Filters -->
-    <label for="era">Max ERA:</label>
-    <input type="number" step="0.01" id="era" placeholder="e.g. 3.00">
-    <label for="minIP">Min IP:</label>
-    <input type="number" id="minIP" value="100">
+    <div class="filter-group">
+      <label for="minIP">Min IP:</label>
+      <input type="number" id="minIP" value="100">
+    </div>
 
     <!-- Birthplace -->
-    <label for="city">Birthplace:</label>
-    <input type="text" id="city" placeholder="e.g. Charlotte">
+    <div class="filter-group">
+      <label for="city">Birthplace:</label>
+      <input type="text" id="city" placeholder="e.g. Charlotte">
+    </div>
+
+    <!-- Active Years -->
+    <div class="filter-group">
+      <label for="fromYear">Active From:</label>
+      <input type="number" id="fromYear" placeholder="e.g. 1980">
+    </div>
+
+    <div class="filter-group">
+      <label for="toYear">To:</label>
+      <input type="number" id="toYear" placeholder="e.g. 1990">
+    </div>
 
     <button onclick="runQuery()">Search</button>
-  </div>
+  </section>
 
-  <div id="output"></div>
+  <!-- Milestone Clubs -->
+  <section class="milestones">
+    <h2>Milestone Clubs</h2>
+    <button onclick="runMilestone('HR', 500)">500+ HR Club</button>
+    <button onclick="runMilestone('H', 3000)">3000 Hits Club</button>
+    <button onclick="runMilestone('W', 300)">300 Wins Club</button>
+  </section>
+
+  <section id="results">
+    <div id="output"></div>
+  </section>
 
   <script>
     async function runQuery() {
-      const name = document.getElementById('name').value;
-      const fromYear = document.getElementById('fromYear').value;
-      const toYear = document.getElementById('toYear').value;
       const stat = document.getElementById('stat').value;
       const limit = document.getElementById('limit').value;
-      const era = document.getElementById('era').value;
-      const minIP = document.getElementById('minIP').value;
       const city = document.getElementById('city').value;
+      const minIP = document.getElementById('minIP').value;
+      const fromYear = document.getElementById('fromYear').value;
+      const toYear = document.getElementById('toYear').value;
 
       let url = "/.netlify/functions/query";
 
-      // Decide which query to call
-      if (name) {
-        url += `?query=playersFromCity&city=${encodeURIComponent(name)}`; // you can add a "searchByName" case later
-      } else if (city) {
+      if (city) {
         url += `?query=playersFromCity&city=${encodeURIComponent(city)}`;
-      } else if (era) {
+      } else if (minIP) {
         url += `?query=lowestERA&minIP=${minIP}`;
       } else {
         url += `?query=topStat&stat=${stat}&limit=${limit}`;
       }
 
-      const response = await fetch(url);
-      const data = await response.json();
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        renderTable(data);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
 
-      // Build table
-      if (Array.isArray(data)) {
-        let table = "<table><thead><tr>";
+    async function runMilestone(stat, threshold) {
+      let url = `/.netlify/functions/query?query=topStat&stat=${stat}&limit=200`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const filtered = data.filter(player => player[stat] >= threshold);
+        renderTable(filtered);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+
+    function renderTable(data) {
+      if (Array.isArray(data) && data.length > 0) {
+        let table = "<table id='outputTable'><thead><tr>";
         const keys = Object.keys(data[0]);
         keys.forEach(k => table += `<th>${k}</th>`);
         table += "</tr></thead><tbody>";
 
         data.forEach(row => {
           table += "<tr>";
-          keys.forEach(k => table += `<td>${row[k]}</td>`);
+          keys.forEach(k => {
+            let val = row[k];
+            // Format batting average
+            if (k === "BA" && val != null) {
+              val = parseFloat(val).toFixed(3);
+              if (val.startsWith("0")) val = val.substring(1);
+            }
+            table += `<td>${val}</td>`;
+          });
           table += "</tr>";
         });
 
         table += "</tbody></table>";
-        document.getElementById('output').innerHTML = table;
+        document.getElementById("output").innerHTML = table;
+        makeTableSortable("outputTable");
       } else {
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        document.getElementById("output").innerHTML = "<p>No results found.</p>";
       }
+    }
+
+    // Column sorting
+    function makeTableSortable(tableId) {
+      const table = document.getElementById(tableId);
+      const headers = table.querySelectorAll("th");
+      headers.forEach((header, index) => {
+        header.addEventListener("click", () => {
+          const rows = Array.from(table.querySelectorAll("tbody tr"));
+          const asc = header.classList.toggle("asc");
+          rows.sort((a, b) => {
+            const valA = a.children[index].innerText;
+            const valB = b.children[index].innerText;
+            const numA = parseFloat(valA) || valA;
+            const numB = parseFloat(valB) || valB;
+            return asc ? (numA > numB ? 1 : -1) : (numA < numB ? 1 : -1);
+          });
+          rows.forEach(row => table.querySelector("tbody").appendChild(row));
+        });
+      });
     }
   </script>
 </body>
