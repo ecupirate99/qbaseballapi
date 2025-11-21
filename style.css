@@ -1,0 +1,56 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 2rem;
+  background: #f9f9f9;
+}
+
+h1 {
+  color: #333;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin-bottom: 2rem;
+}
+
+label {
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+input, select, button {
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+button {
+  background: #007acc;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 1.5rem;
+}
+
+button:hover {
+  background: #005fa3;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 1rem;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+th {
+  background: #007acc;
+  color: white;
+}
