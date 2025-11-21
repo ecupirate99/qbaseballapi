@@ -6,31 +6,32 @@ body {
 
 h1 {
   color: #333;
+  margin-bottom: 1rem;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  max-width: 400px;
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  max-width: 600px;
   margin-bottom: 2rem;
 }
 
 label {
-  margin-top: 1rem;
   font-weight: bold;
 }
 
 input, select, button {
   padding: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 button {
+  grid-column: span 2;
   background: #007acc;
   color: white;
   border: none;
   cursor: pointer;
-  margin-top: 1.5rem;
 }
 
 button:hover {
@@ -40,8 +41,7 @@ button:hover {
 table {
   border-collapse: collapse;
   width: 100%;
-  max-width: 600px;
-  margin-top: 1rem;
+  max-width: 800px;
 }
 
 th, td {
