@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Baseball Museum API Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Baseball Museum API Tester</h1>
+
+  <div class="form">
+    <label for="query">Choose query type:</label>
+    <select id="query">
+      <option value="topStat">Top Stat</option>
+      <option value="playersFromCity">Players From City</option>
+      <option value="countCity">Count Players From City</option>
+      <option value="lowestERA">Lowest ERA</option>
+    </select>
+
+    <label for="stat">Stat (for topStat):</label>
+    <input type="text" id="stat" placeholder="e.g. HR, BA, SLG">
+
+    <label for="limit">Limit:</label>
+    <input type="number" id="limit" value="10">
+
+    <label for="city">City (for city queries):</label>
+    <input type="text" id="city" placeholder="e.g. Charlotte">
+
+    <label for="minIP">Min IP (for lowestERA):</label>
+    <input type="number" id="minIP" value="100">
+
+    <button onclick="callAPI()">Run Query</button>
+  </div>
+
+  <div id="output"></div>
+
+  <script>
+    async function callAPI() {
+      const query = document.getElementById('query').value;
+      const stat = document.getElementById('stat').value;
+      const limit = document.getElementById('limit').value;
+      const city = document.getElementById('city').value;
+      const minIP = document.getElementById('minIP').value;
+
+      let url = `/.netlify/functions/query?query=${query}`;
+      if (stat) url += `&stat=${stat}`;
+      if (limit) url += `&limit=${limit}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
+      if (minIP) url += `&minIP=${minIP}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Handle countCity separately
+        if (query === "countCity") {
+          document.getElementById('output').innerHTML = `<p>Players from ${city}: <strong>${data.count}</strong></p>`;
+          return;
+        }
+
+        // Build table
+        if (Array.isArray(data)) {
+          let table = "<table><thead><tr>";
+          // Use keys from first record
+          const keys = Object.keys(data[0]);
+          keys.forEach(k => table += `<th>${k}</th>`);
+          table += "</tr></thead><tbody>";
+
+          data.forEach(row => {
+            table += "<tr>";
+            keys.forEach(k => table += `<td>${row[k]}</td>`);
+            table += "</tr>";
+          });
+
+          table += "</tbody></table>";
+          document.getElementById('output').innerHTML = table;
+        } else {
+          document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        document.getElementById('output').textContent = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
